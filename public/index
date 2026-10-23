@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#101522">
+<title>Territory LIVE — Prototype</title>
+<style>
+:root{--bg:#101522;--panel:#1a2233;--text:#f5f7ff;--muted:#9ba8c2}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overscroll-behavior:none}
+body{display:flex;flex-direction:column;min-height:100dvh}
+header{padding:10px 14px 8px;display:flex;align-items:center;justify-content:center;gap:10px;min-height:54px}
+h1{font-size:18px;margin:0;letter-spacing:.3px}
+.sub{font-size:11px;color:var(--muted);margin-top:2px}
+.pill{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:1px;background:#273149;color:#dce5ff;border-radius:12px;padding:8px 18px;white-space:nowrap;min-width:110px;text-align:center}
+main{width:100%;max-width:760px;margin:0 auto;padding:0 10px 12px;display:flex;flex-direction:column;gap:10px;flex:1}
+#arenaWrap{position:relative;width:100%;flex:1;min-height:280px;max-height:65dvh;background:#0a0e17;border:1px solid #35415b;border-radius:16px;overflow:hidden;box-shadow:0 12px 32px #0005}
+canvas{display:block;width:100%;height:100%;touch-action:manipulation}
+#overlay{display:none}
+.tag{font-size:11px;padding:5px 8px;border-radius:7px;background:#0c1220cc;border:1px solid #ffffff1c}
+#status{display:none}
+.scoreboard{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-top:8px}
+.team{background:var(--panel);border:1px solid #ffffff12;border-radius:12px;padding:9px 8px;min-width:0}
+.teamtop{display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;font-weight:700;min-height:34px}
+.dot{display:none}.team-flag{font-size:30px;line-height:1.1}
+.score{font-size:19px;font-weight:800;margin-top:4px;line-height:1.2}
+.small{font-size:10px;color:var(--muted);margin-top:2px}
+.coin-gifts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px}
+.coin-gift{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:0;min-height:58px;padding:7px 3px;border:1px solid #ffffff22;border-radius:11px;font-size:11px}
+.coin-gift .emoji{display:block;width:34px;height:34px;object-fit:contain;line-height:1.05}
+.coin-gift .cost{font-size:10px;font-weight:800;opacity:.9}
+.coin-nl{background:#245fbd}.coin-ma{background:#b92f46}.coin-us{background:#8b6a08}.coin-tr{background:#16835f}
+.controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+button{border:0;border-radius:11px;padding:12px 10px;font:700 13px system-ui;color:#fff;cursor:pointer;touch-action:manipulation;min-height:44px}
+button:active{transform:scale(.98);filter:brightness(1.12)}
+.gift{display:flex;justify-content:space-between;align-items:center;gap:6px;text-align:left}
+.gift span:last-child{font-size:11px;opacity:.88;font-weight:600}
+#pause{background:#303b52}
+#reset{background:#303b52}#pause{background:#303b52}
+.foot{font-size:10px;color:var(--muted);line-height:1.4;text-align:center;padding:0 8px 3px}
+@media (min-width:600px){main{padding-top:4px}.controls{grid-template-columns:repeat(4,minmax(0,1fr))}#arenaWrap{max-height:65vh}}
+</style>
+</head>
+<body>
+<header>
+ <div class="pill" id="timeTag">02:00</div>
+</header>
+<main>
+ <div id="arenaWrap">
+  <canvas id="game" aria-label="Territory game"></canvas>
+  <div id="overlay"></div>
+  <div id="status">Send a gift to add a ball</div>
+ </div>
+ <section class="coin-gifts" aria-label="One-coin gifts">
+  <button class="coin-gift coin-nl" data-team="0" data-count="1" data-cost="1" data-name="Rose"><img class="emoji" src="https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/eba3a9bb85c33e017f3648eaf88d7189~tplv-obj.webp" alt="TikTok Rose gift"><span class="cost">+1 ball</span></button>
+  <button class="coin-gift coin-ma" data-team="1" data-count="1" data-cost="1" data-name="GG"><img class="emoji" src="https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/3f02fa9594bd1495ff4e8aa5ae265eef~tplv-obj.webp" alt="TikTok GG gift"><span class="cost">+1 ball</span></button>
+  <button class="coin-gift coin-us" data-team="2" data-count="1" data-cost="1" data-name="Coffee"><img class="emoji" src="https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/802a21ae29f9fae5abe3693de9f874bd~tplv-obj.webp" alt="TikTok gift"><span class="cost">+1 ball</span></button>
+  <button class="coin-gift coin-tr" data-team="3" data-count="1" data-cost="1" data-name="Ice Cream"><img class="emoji" src="https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/968820bc85e274713c795a6aef3f7c67~tplv-obj.webp" alt="TikTok Ice Cream Cone gift"><span class="cost">+1 ball</span></button>
+ </section>
+ <section class="scoreboard" id="scoreboard">
+  <div class="team"><div class="teamtop"><span class="team-flag" aria-label="Netherlands">🇳🇱</span></div><div class="score" id="s0">25%</div><div class="small" id="b0">1 ball</div></div>
+  <div class="team"><div class="teamtop"><span class="team-flag" aria-label="Morocco">🇲🇦</span></div><div class="score" id="s1">25%</div><div class="small" id="b1">1 ball</div></div>
+  <div class="team"><div class="teamtop"><span class="team-flag" aria-label="USA">🇺🇸</span></div><div class="score" id="s2">25%</div><div class="small" id="b2">1 ball</div></div>
+  <div class="team"><div class="teamtop"><span class="team-flag" aria-label="Turkey">🇹🇷</span></div><div class="score" id="s3">25%</div><div class="small" id="b3">1 ball</div></div>
+ </section>
+ <section class="controls"><button id="pause">Ⅱ Pause</button><button id="reset">↻ New Round</button></section>
+ <div class="foot">Offline prototype: tap a gift button to simulate it. Coin prices are game rules for this prototype; real TikTok gift values and LIVE integration are not connected yet.</div>
+</main>
+<script>
+(() => {
+const canvas=document.getElementById('game'), ctx=canvas.getContext('2d');
+const wrap=document.getElementById('arenaWrap');
+const colors=['#4387ff','#ff526b','#ffd34d','#35d6a0'];
+const names=['Netherlands','Morocco','USA','Turkey'];
+const flagCodes=['nl','ma','us','tr'];
+const cols=48, rows=32;
+let grid=[], balls=[], paused=false, elapsed=0, last=0, running=true, winnerTeam=null, tied=false, restartTimer=null, restartAt=0;
+const ROUND_LENGTH=120;
+let W=480,H=320,cellW=10,cellH=10, ballId=0;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function resize(){
+ const r=wrap.getBoundingClientRect(), dpr=Math.min(window.devicePixelRatio||1,2);
+ W=Math.max(280,r.width); H=Math.max(240,r.height);
+ canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);
+ ctx.setTransform(dpr,0,0,dpr,0,0);
+ cellW=W/cols;cellH=H/rows;
+ draw();
+}
+function idx(x,y){return y*cols+x}
+function init(){
+ if(restartTimer!==null){clearTimeout(restartTimer);restartTimer=null}
+ restartAt=0;
+ grid=new Array(cols*rows);
+ for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
+  // Four corner bases, with slightly irregular frontiers.
+  let owner;
+  const left=x<cols/2, top=y<rows/2;
+  if(left&&top) owner=0;
+  else if(!left&&top) owner=1;
+  else if(left&&!top) owner=2;
+  else owner=3;
+  grid[idx(x,y)]=owner;
+ }
+ balls=[];ballId=0;
+ const starts=flagPositions();
+ starts.forEach((p,t)=>spawn(t,p.x,p.y));
+ elapsed=0;paused=false;running=true;winnerTeam=null;tied=false;
+ 
+ document.getElementById('pause').textContent='Ⅱ Pause';
+ document.getElementById('status').textContent='Send a gift to add a ball';
+ updateStats();draw();
+}
+function flagPositions(){
+ const r=Math.max(19,Math.min(29,W*.055)),pad=r+9;
+ return [[pad,pad],[W-pad,pad],[pad,H-pad],[W-pad,H-pad]].map(([x,y])=>({x,y}));
+}
+function spawn(team,x,y){
+ const a=Math.random()*Math.PI*2, speed=68;
+ // All new balls emerge from the corresponding country's flag.
+ const r=Math.max(4,Math.min(cellW,cellH)*.42);
+ balls.push({id:++ballId,team,x:clamp(x, r,W-r),y:clamp(y,r,H-r),vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,speed,r,trail:[]});
+}
+function addGift(team,count=1,cost=1,giftName='Gift'){
+ if(balls.length+count>260){document.getElementById('status').textContent='Arena full! Start a new round to keep playing.';return}
+ // Gift balls always spawn at their own country's flag.
+ const p=flagPositions()[team];
+ for(let i=0;i<count;i++)spawn(team,p.x+(Math.random()-.5)*4,p.y+(Math.random()-.5)*4);
+ document.getElementById('status').textContent=giftName+' for '+names[team]+'! +'+count+' '+(count===1?'ball':'balls')+' · '+cost+' '+(cost===1?'coin':'coins');
+ updateStats();
+}
+function cellAt(x,y){return {x:clamp(Math.floor(x/cellW),0,cols-1),y:clamp(Math.floor(y/cellH),0,rows-1)}}
+function simulate(dt){
+ // Substep movement so balls cannot tunnel through opposing territory tiles.
+ const maxStep=Math.max(1,Math.min(cellW,cellH)*.18);
+ const steps=Math.max(1,Math.ceil(68*dt/maxStep)), stepDt=dt/steps;
+ for(const b of balls){
+  for(let step=0;step<steps;step++){
+   const dx=b.vx*stepDt,dy=b.vy*stepDt;
+   let nx=b.x+dx,ny=b.y+dy;
+   if(nx<b.r){nx=b.r;b.vx=Math.abs(b.vx)}
+   if(nx>W-b.r){nx=W-b.r;b.vx=-Math.abs(b.vx)}
+   if(ny<b.r){ny=b.r;b.vy=Math.abs(b.vy)}
+   if(ny>H-b.r){ny=H-b.r;b.vy=-Math.abs(b.vy)}
+   const cx=clamp(Math.floor(nx/cellW),0,cols-1),cy=clamp(Math.floor(ny/cellH),0,rows-1);
+   const owner=grid[idx(cx,cy)];
+   if(owner!==b.team){
+    // Bounce off the tile face instead of allowing a ball to pass through it.
+    const testX=clamp(Math.floor(nx/cellW),0,cols-1), testY=clamp(Math.floor(b.y/cellH),0,rows-1);
+    const testXOwner=grid[idx(testX,testY)];
+    const testYOwner=grid[idx(clamp(Math.floor(b.x/cellW),0,cols-1),cy)];
+    if(testXOwner!==b.team) b.vx=-b.vx; else if(testYOwner!==b.team) b.vy=-b.vy; else {b.vx=-b.vx;b.vy=-b.vy}
+    // Claim the contacted tile on impact; the ball itself remains on its own side.
+    grid[idx(cx,cy)]=b.team;
+    if(Math.random()<.12){
+     const dirs=[[1,0],[-1,0],[0,1],[0,-1]],d=dirs[Math.floor(Math.random()*dirs.length)],tx=cx+d[0],ty=cy+d[1];
+     if(tx>=0&&tx<cols&&ty>=0&&ty<rows)grid[idx(tx,ty)]=b.team;
+    }
+   }else{b.x=nx;b.y=ny}
+   // Keep every ball at the same constant speed, regardless of team or collisions.
+   const mag=Math.hypot(b.vx,b.vy)||1;b.vx=b.vx/mag*b.speed;b.vy=b.vy/mag*b.speed;
+  }
+ }
+ // Equal-mass ball collisions: exchange the normal velocity component, then normalize speed.
+ for(let i=0;i<balls.length;i++)for(let j=i+1;j<balls.length;j++){
+  const a=balls[i],b=balls[j],dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy),min=a.r+b.r;
+  if(d>0&&d<min){
+   const nx=dx/d,ny=dy/d,over=(min-d)/2;
+   a.x=clamp(a.x-nx*over,a.r,W-a.r);a.y=clamp(a.y-ny*over,a.r,H-a.r);
+   b.x=clamp(b.x+nx*over,b.r,W-b.r);b.y=clamp(b.y+ny*over,b.r,H-b.r);
+   const rel=(a.vx-b.vx)*nx+(a.vy-b.vy)*ny;
+   if(rel>0){a.vx-=rel*nx;a.vy-=rel*ny;b.vx+=rel*nx;b.vy+=rel*ny}
+   for(const q of [a,b]){const mag=Math.hypot(q.vx,q.vy)||1;q.vx=q.vx/mag*q.speed;q.vy=q.vy/mag*q.speed}
+  }
+ }
+}
+
+function drawFlag(team,cx,cy,r){
+ ctx.save();
+ ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.clip();
+ if(team===0){ // Netherlands: horizontal red, white, blue
+  ctx.fillStyle='#ffffff';ctx.fillRect(cx-r,cy-r,2*r,2*r);
+  ctx.fillStyle='#ae1c28';ctx.fillRect(cx-r,cy-r,2*r,2*r/3);
+  ctx.fillStyle='#21468b';ctx.fillRect(cx-r,cy+r/3,2*r,2*r/3);
+ }else if(team===1){ // Morocco: red with green pentagram
+  ctx.fillStyle='#c1272d';ctx.fillRect(cx-r,cy-r,2*r,2*r);
+  // Correct five-point green pentagram, like the Moroccan national flag.
+  ctx.strokeStyle='#006233';ctx.lineWidth=Math.max(1.4,r*.095);ctx.lineJoin='round';ctx.beginPath();
+  for(let k=0;k<10;k++){const a=-Math.PI/2+k*Math.PI/5,rr=k%2===0?r*.48:r*.205;const x=cx+Math.cos(a)*rr,y=cy+Math.sin(a)*rr;k===0?ctx.moveTo(x,y):ctx.lineTo(x,y)}
+  ctx.closePath();ctx.stroke();
+ }else if(team===2){ // USA: stripes and blue canton
+  const stripeH=2*r/13;for(let k=0;k<13;k++){ctx.fillStyle=k%2===0?'#b22234':'#fff';ctx.fillRect(cx-r,cy-r+k*stripeH,2*r,stripeH+.3)}
+  ctx.fillStyle='#3c3b6e';ctx.fillRect(cx-r,cy-r,r*1.05,stripeH*7);
+  ctx.fillStyle='#fff';for(let row=0;row<5;row++)for(let col=0;col<5;col++){ctx.beginPath();ctx.arc(cx-r+r*.12+col*r*.17,cy-r+stripeH*.55+row*stripeH*1.18,Math.max(.45,r*.025),0,Math.PI*2);ctx.fill()}
+ }else{ // Turkey: red with crescent and star
+  ctx.fillStyle='#e30a17';ctx.fillRect(cx-r,cy-r,2*r,2*r);
+  ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(cx-r*.12,cy, r*.48,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#e30a17';ctx.beginPath();ctx.arc(cx+r*.02,cy-r*.08,r*.38,0,Math.PI*2);ctx.fill();
+  const sx=cx+r*.43,sy=cy;ctx.fillStyle='#fff';ctx.beginPath();for(let k=0;k<10;k++){const rr=k%2===0?r*.19:r*.08,a=-Math.PI/2+k*Math.PI/5;const x=sx+Math.cos(a)*rr,y=sy+Math.sin(a)*rr;k===0?ctx.moveTo(x,y):ctx.lineTo(x,y)}ctx.closePath();ctx.fill();
+ }
+ ctx.restore();
+ ctx.save();ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.strokeStyle='#ffffffd9';ctx.lineWidth=2;ctx.stroke();ctx.restore();
+}
+function drawCornerBases(){
+ const spots=flagPositions().map(p=>[p.x,p.y]);
+ const r=Math.max(19,Math.min(29,W*.055));
+ const teams=[0,1,2,3];
+ for(let i=0;i<spots.length;i++){
+  const [x,y]=spots[i],team=teams[i];
+  ctx.save();ctx.shadowColor=colors[team];ctx.shadowBlur=13;
+  ctx.beginPath();ctx.arc(x,y,r+3,0,Math.PI*2);ctx.fillStyle='#101522';ctx.fill();
+  ctx.restore();drawFlag(team,x,y,r);
+  ctx.save();ctx.font='700 10px system-ui, sans-serif';ctx.textAlign=x<W/2?'left':'right';ctx.textBaseline=y<H/2?'top':'bottom';
+  const tx=x<W/2?x+r+7:x-r-7,ty=y<H/2?y-r*.7:y+r*.7;
+  ctx.restore();
+ }
+}
+function draw(){
+ if(!ctx)return;
+ ctx.clearRect(0,0,W,H);
+ // territory tiles
+ for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
+  ctx.fillStyle=colors[grid[idx(x,y)]];ctx.globalAlpha=.74;
+  ctx.fillRect(x*cellW,y*cellH,cellW+.35,cellH+.35);
+ }
+ ctx.globalAlpha=1;
+ // grid overlay
+ ctx.strokeStyle='#ffffff0b';ctx.lineWidth=.5;
+ for(let x=1;x<cols;x++){ctx.beginPath();ctx.moveTo(x*cellW,0);ctx.lineTo(x*cellW,H);ctx.stroke()}
+ for(let y=1;y<rows;y++){ctx.beginPath();ctx.moveTo(0,y*cellH);ctx.lineTo(W,y*cellH);ctx.stroke()}
+ // balls with glow and white highlight
+ for(const b of balls){
+  ctx.save();ctx.shadowColor=colors[b.team];ctx.shadowBlur=10;
+  ctx.fillStyle=colors[b.team];ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,Math.PI*2);ctx.fill();
+  ctx.shadowBlur=0;ctx.fillStyle='#ffffffd9';ctx.beginPath();ctx.arc(b.x-b.r*.24,b.y-b.r*.27,Math.max(1.2,b.r*.22),0,Math.PI*2);ctx.fill();
+  ctx.restore();
+ }
+ // center crosshair line marks the original borders
+ ctx.strokeStyle='#ffffff36';ctx.lineWidth=1;ctx.setLineDash([4,5]);ctx.beginPath();ctx.moveTo(W/2,0);ctx.lineTo(W/2,H);ctx.moveTo(0,H/2);ctx.lineTo(W,H/2);ctx.stroke();ctx.setLineDash([]);
+ drawCornerBases();
+ if(!running && winnerTeam!==null){
+  ctx.save();ctx.fillStyle='#101522dd';ctx.fillRect(0,0,W,H);
+  const fr=Math.min(58,W*.15,H*.18);drawFlag(winnerTeam,W/2,H/2-14,fr);
+  ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='900 '+Math.max(24,Math.min(40,W*.09))+'px system-ui, sans-serif';
+  ctx.lineWidth=5;ctx.strokeStyle='#101522';ctx.strokeText('WINNER!',W/2,H/2+fr+35);ctx.fillStyle='#ffffff';ctx.fillText('WINNER!',W/2,H/2+fr+35);
+  if(tied){ctx.font='700 13px system-ui, sans-serif';ctx.fillText('TIE',W/2,H/2+fr+58)}
+  const remaining=Math.max(0,Math.ceil((restartAt-Date.now())/1000));
+  ctx.font='900 '+Math.max(19,Math.min(27,W*.065))+'px system-ui, sans-serif';
+  ctx.fillStyle='#ffd83d';ctx.fillText('NEW ROUND',W/2,H/2+fr+83);
+  ctx.font='900 '+Math.max(24,Math.min(34,W*.08))+'px system-ui, sans-serif';ctx.fillText(String(remaining),W/2,H/2+fr+117);
+  ctx.restore();
+ }
+}
+function updateStats(){
+ const counts=[0,0,0,0];for(const v of grid)counts[v]++;
+ for(let i=0;i<4;i++){
+  document.getElementById('s'+i).textContent=Math.round(counts[i]/grid.length*100)+'%';
+  const n=balls.filter(b=>b.team===i).length;
+  document.getElementById('b'+i).textContent=n+' '+(n===1?'ball':'balls');
+ }
+}
+function fmt(s){let m=Math.floor(s/60),sec=Math.floor(s%60);return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0')}
+function finishRound(){
+ running=false;
+ const counts=[0,0,0,0];for(const v of grid)counts[v]++;
+ const max=Math.max(...counts), winners=counts.map((v,i)=>v===max?i:null).filter(v=>v!==null);
+ tied=winners.length>1;winnerTeam=winners[0];
+ document.getElementById('status').textContent='';
+ document.getElementById('pause').disabled=true;
+ draw();
+ // Show a visible five-second countdown before automatically starting the next round.
+ restartAt=Date.now()+5000;
+ restartTimer=setTimeout(()=>{document.getElementById('pause').disabled=false;init();restartTimer=null;restartAt=0},5000);
+}
+
+function frame(now){
+ if(!last)last=now;const dt=Math.min((now-last)/1000,.035);last=now;
+ if(!paused&&running){simulate(dt);elapsed=Math.min(ROUND_LENGTH,elapsed+dt);if(elapsed>=ROUND_LENGTH)finishRound()}
+ draw();
+ document.getElementById('timeTag').textContent=fmt(Math.max(0,ROUND_LENGTH-elapsed));
+ if(Math.floor(now/500)!==Math.floor((now-dt*1000)/500))updateStats();
+ requestAnimationFrame(frame);
+}
+document.querySelectorAll('.coin-gift').forEach(btn=>btn.addEventListener('click',()=>{const team=Number(btn.dataset.team),count=Number(btn.dataset.count),cost=Number(btn.dataset.cost);const giftName=btn.dataset.name||(count===1?'Gift':'Beer');addGift(team,count,cost,giftName)}));
+// Live bridge: when hosted with server.mjs, actual TikTok gifts arrive over /events.
+(function connectLiveBridge(){
+ const scheme=location.protocol==='https:'?'wss:':'ws:';
+ let socket;
+ try { socket=new WebSocket(`${scheme}//${location.host}/events`); } catch { return; }
+ socket.addEventListener('open',()=>{ document.querySelector('.foot').textContent='LIVE-verbinding geopend. Wacht op TikTok-gifts; de knoppen hieronder zijn nog handmatige testknoppen.'; });
+ socket.addEventListener('message',(event)=>{
+  let msg; try { msg=JSON.parse(event.data); } catch { return; }
+  if(msg.type==='connection' && !msg.tiktokConfigured){document.querySelector('.foot').textContent='Simulatiemodus: stel eerst TIKTOK_USERNAME in bij de hostinginstellingen.';return;}
+  if(msg.type==='gift' && Number.isInteger(msg.team) && msg.team>=0 && msg.team<=3){
+   addGift(msg.team,Math.max(1,Number(msg.count)||1),0,`${msg.giftName} from @${msg.username}`);
+  }
+ });
+ socket.addEventListener('close',()=>{document.querySelector('.foot').textContent='LIVE-verbinding verbroken. Ververs de pagina om opnieuw te verbinden.';});
+})();
+document.getElementById('pause').addEventListener('click',()=>{paused=!paused;document.getElementById('pause').textContent=paused?'▶ Resume':'Ⅱ Pause';document.getElementById('status').textContent=paused?'Game paused':'The battle continues'});
+document.getElementById('reset').addEventListener('click',()=>{if(restartTimer!==null){clearTimeout(restartTimer);restartTimer=null}document.getElementById('pause').disabled=false;init()});
+window.addEventListener('resize',resize);
+resize();init();requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
