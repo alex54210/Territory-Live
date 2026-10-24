@@ -12,21 +12,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Download repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-
-      - name: Set up Java
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "21"
 
-      - name: Prepare Android app
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Prepare Android project
         run: |
           mkdir -p apk-project/www
           cp public/index.html apk-project/www/index.html
@@ -38,10 +38,7 @@ jobs:
           {
             "appId": "com.alex54210.territorylive",
             "appName": "Territory LIVE",
-            "webDir": "www",
-            "server": {
-              "androidScheme": "https"
-            }
+            "webDir": "www"
           }
           EOF
           npx cap add android
@@ -53,9 +50,10 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug
 
-      - name: Save APK for download
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Territory-LIVE-APK
           path: apk-project/android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+
